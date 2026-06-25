@@ -1,0 +1,33 @@
+name: C/C++ CI
+
+# 触发条件：当 main 分支有代码 push（推送）时，启动编译
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    # 告诉 GitHub 给我开一台最新版的 Ubuntu 云端虚拟机
+    runs-on: ubuntu-latest
+
+    steps:
+    # 步骤 1：把仓库里的源码拉取到云端虚拟机中
+    - name: Checkout source code
+      uses: actions/checkout@v4
+
+    # 步骤 2：在虚拟机里执行编译命令
+    - name: Compile Hello World
+      run: |
+        gcc main.c -o hello
+        echo "编译成功！"
+
+    # 步骤 3：执行一下编译出来的程序，看看对不对
+    - name: Run Test
+      run: ./hello
+
+    # 步骤 4：把编译好的成品（Artifact）打包保存，供你下载
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: my-hello-executable
+        path: hello
