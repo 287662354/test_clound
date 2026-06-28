@@ -15,19 +15,34 @@ jobs:
     - name: Checkout source code
       uses: actions/checkout@v4
 
-    # 步骤 2：在虚拟机里执行编译命令
+    # 步骤 2：恢复带后缀的可执行文件缓存
+    - name: Restore executable cache
+      uses: actions/cache@v4
+      with:
+        path: build/hello.cache
+        key: ${{ runner.os }}-hello-cache-${{ hashFiles('main.c') }}
+
+    # 步骤 3：在虚拟机里执行编译命令，缓存命中时直接复用
     - name: Compile Hello World
       run: |
-        gcc main.c -o hello
+        mkdir -p build
+        if [ -f build/hello.cache ]; then
+          echo "缓存命中，直接使用 build/hello.cache"
+        else
+          gcc main.c -o build/hello.cache
+          chmod +x build/hello.cache
+          echo "缓存未命中，已重新编译"
+        fi
+        ls -l build/hello.cache
         echo "编译成功！"
 
-    # 步骤 3：执行一下编译出来的程序，看看对不对
+    # 步骤 4：执行一下编译出来的程序，看看对不对
     - name: Run Test
-      run: ./hello
+      run: ./build/hello.cache
 
-    # 步骤 4：把编译好的成品（Artifact）打包保存，供你下载
+    # 步骤 5：把编译好的成品（Artifact）打包保存，供你下载
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: my-hello-executable
-        path: hello
+        name: my-hello-executable-cache
+        path: build/hello.cache
